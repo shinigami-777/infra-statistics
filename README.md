@@ -13,7 +13,6 @@ HOWTO
     $> groovy download.groovy [pwd]
 
 2. collect the data from the raw json format and store it into a local SQLight database
-   ... you might have to increase the memory: export JAVA_OPTS="-Xmx4000M -Xms4000M"
    
     $> groovy collectNumbers.groovy
 
