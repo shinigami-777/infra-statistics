@@ -1,8 +1,4 @@
 import org.sqlite.*
-import java.sql.*
-import java.util.zip.GZIPInputStream;
-
-import groovy.xml.MarkupBuilder
 
 @Grapes([
     @Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.3'),
@@ -11,17 +7,17 @@ import groovy.xml.MarkupBuilder
 ])
 
 
-class Generator {
+class NumberCollector {
 
     def db
     def workingDir
 
-    def Generator(workingDir, db){
+    def NumberCollector(workingDir, db){
         this.db = db
         this.workingDir = workingDir
     }
 
-    def generateStats(file) {
+    def generateStats(File file) {
 
         if(!DBHelper.doImport(db, file.name)){
             println "skip $file - already imported..."
@@ -29,14 +25,15 @@ class Generator {
         }
 
         def dateStr = file.name.substring(0, 6)
-        java.util.Date monthDate = java.util.Date.parse('yyyyMM', dateStr)
-
-        JenkinsMetricParser p = new JenkinsMetricParser()
-        def installations = p.parse(file)
+        def monthDate = java.util.Date.parse('yyyyMM', dateStr)
+        int records=0;
 
         db.withTransaction({
-
-            installations.each { instId, metric ->
+            JenkinsMetricParser p = new JenkinsMetricParser()
+            p.forEachInstance(file) { InstanceMetric metric ->
+                if ((records++)%100==0)
+                    System.out.print('.');
+                def instId = metric.instanceId;
 
                 db.execute("insert into jenkins(instanceid, month, version) values( $instId, $monthDate, ${metric.jenkinsVersion})")
 
@@ -58,23 +55,23 @@ class Generator {
             db.execute("insert into importedfile(name) values($file.name)")
         })
 
-        println "commited data for ${monthDate.format('yyyy-MM')}"
+        println "\ncommited ${records} records for ${monthDate.format('yyyy-MM')}"
     }
 
-    def run(filePattern) {
-        if(filePattern){
-            workingDir.eachFileMatch( ~"$filePattern" ) { file -> generateStats(file) }
-        }else{
+    def run(String[] args) {
+        if (args.length==0) {
             workingDir.eachFileMatch( ~".*json" ) { file -> generateStats(file) }
             //workingDir.eachFileMatch( ~"201109.json" ) { file -> generateStats(file) }
             //workingDir.eachFileMatch( ~"200812.json" ) { file -> generateStats(file) }
+        } else {
+            args.each { name -> generateStats(new File(name)) }
         }
     }
 }
 
 def workingDir = new File("target")
 def db = DBHelper.setupDB(workingDir)
-new Generator(workingDir, db).run( args ? args[0] : null )
+new NumberCollector(workingDir, db).run(args)
 
 
 

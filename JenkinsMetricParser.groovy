@@ -2,22 +2,9 @@
 
 import org.codehaus.jackson.JsonToken
 
-import java.io.File
-import java.text.SimpleDateFormat;
-
 import org.codehaus.jackson.*
 import org.codehaus.jackson.map.*
-
-/**
- * A metric instance for one instance 
- */
-class InstanceMetric {
-    def jenkinsVersion
-    def plugins
-    def jobTypes
-    def nodesOnOs
-    def totalExecutors
-}
+import java.util.zip.GZIPInputStream
 
 /**
  * This parser treats a file as an input for one month and only uses the newest stats entry of each instanceId.
@@ -32,13 +19,22 @@ class JenkinsMetricParser {
      * SNAPSHOT versions are ignored too.
      */
     public Map parse(File file) throws Exception {
+        def installations = [:]
+        forEachInstance(file) { InstanceMetric m -> installations[m.instanceId]=m }
+        return installations
+    }
 
+    /**
+     * Pass {@link InstanceMetric} for each installation to the given closure.
+     */
+    public void forEachInstance(File file, Closure processor) throws Exception {
         println "parsing $file"
 
-        def installations = [:]
-
         JsonFactory f = new org.codehaus.jackson.map.MappingJsonFactory();
-        JsonParser jp = f.createJsonParser(file);
+
+        def is = new FileInputStream(file);
+        if (file.name.endsWith(".gz"))  is = new GZIPInputStream(is)
+        JsonParser jp = f.createJsonParser(is);
 
         JsonToken current;
 
@@ -111,14 +107,13 @@ class JenkinsMetricParser {
                 }
 
                 if(jVersion){ // && availableStatsForInstance >= 10 // take stats only if we have at least 10 stats snapshots
-                    def metric = new InstanceMetric(jenkinsVersion: jVersion, plugins: plugins, jobTypes: jobs, nodesOnOs: nodesOnOs, totalExecutors: totalExecutors)
-                    installations.put(instanceId, metric)
+                    def metric = new InstanceMetric(instanceId:instanceId, jenkinsVersion: jVersion, plugins: plugins, jobTypes: jobs, nodesOnOs: nodesOnOs, totalExecutors: totalExecutors)
+
+                    processor(metric)
                 }
 
                 // jp.skipChildren();
             }
         }
-
-        return installations
     }
 }
