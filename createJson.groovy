@@ -37,20 +37,25 @@ class Generator {
         db.eachRow("select name from plugin where name not like 'privateplugin%' group by name ;") { names << it.name }
         println "found ${names.size()} plugins"
 
+        def total = [:];
+        db.eachRow("select month, count(*) as number from jenkins group by month order by month ASC;") {
+            total[it.month] = it.number;
+        }
+
         names.each{ name ->
             def month2number = [:]
+            def month2percentage = [:]
             def file = new File(statsDir, "${name}.stats.json")
             // fetch the number of installations per plugin per month
             db.eachRow("select month, count(*) as number from plugin where name = $name group by month order by month ASC;") {
                 month2number.put it.month, it.number
+                month2percentage[it.month] = (it.number as float)*100/(total[it.month] as float)
             }
             def json = new groovy.json.JsonBuilder()
-            json.installations(month2number)
+            json name:name, installations:month2number, installationsPercentage:month2percentage
             file << groovy.json.JsonOutput.prettyPrint(json.toString())
             println "wrote: $file.absolutePath"
         }
-
-
     }
 
 
