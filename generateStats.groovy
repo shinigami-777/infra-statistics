@@ -345,7 +345,7 @@ class Generator {
 })
 """
 
-    def run() {
+    def run(String[] args) {
         svgDir.deleteDir()
         svgDir.mkdirs()
         if (args.length>0) {
@@ -364,5 +364,5 @@ class Generator {
 
 }
 
-new Generator().run()
+new Generator().run(args)
 
