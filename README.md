@@ -11,7 +11,7 @@ More specifically:
 HOWTO
 -----
 
-1. download the scripts from jenkins-ci.org
+1. download the raw data (*.json.gz) from jenkins-ci.org
 
    $> groovy download.groovy [pwd]
 

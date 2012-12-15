@@ -1,3 +1,4 @@
+#!/usr/bin/env groovy
 import org.sqlite.*
 
 @Grapes([
@@ -60,7 +61,7 @@ class NumberCollector {
 
     def run(String[] args) {
         if (args.length==0) {
-            workingDir.eachFileMatch( ~".*json" ) { file -> generateStats(file) }
+            workingDir.eachFileMatch( ~".*json.gz" ) { file -> generateStats(file) }
             //workingDir.eachFileMatch( ~"201109.json" ) { file -> generateStats(file) }
             //workingDir.eachFileMatch( ~"200812.json" ) { file -> generateStats(file) }
         } else {

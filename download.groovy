@@ -1,3 +1,4 @@
+#!/usr/bin/env groovy
 import java.io.File
 import java.util.zip.GZIPInputStream
 import groovyx.net.http.ContentType
@@ -44,40 +45,20 @@ class Downloader {
             if(fileName.endsWith(".json.gz")){
                 if(DBHelper.doImport(db, fileName)){
                     def fileUrl = '/census/'+fileName
-                    println "download $fileUrl"
                     def targetArchive = new File(workingDir, fileName)
-                    targetArchive << site.get(contentType: ContentType.BINARY, path: fileUrl, headers:[Authorization:"Basic ${userAuth.bytes.encodeBase64()}"] ) // java.io.ByteArrayInputStream
-                    uncompressGZIP(targetArchive)
-                    targetArchive.delete()
+                    if (targetArchive.exists()) {
+                        println "ignore $fileName (already exists)"
+                    } else {
+                        println "download $fileUrl"
+                        def tmp = new File(workingDir,fileName+".tmp");
+                        tmp << site.get(contentType: ContentType.BINARY, path: fileUrl, headers:[Authorization:"Basic ${userAuth.bytes.encodeBase64()}"] ) // java.io.ByteArrayInputStream
+                        tmp.renameTo(targetArchive);
+                    }
                 } else{
                     println "ignore $fileName (already imported)"
                 }
             }
         }
-    }
-
-
-
-
-    /**
-     * uncompress the given gzip to the same location as the given archive
-     * @param file the archive to uncompress
-     * @return
-     */
-    def uncompressGZIP(File file){
-        println "uncompress $file"
-        GZIPInputStream gzipInputStream = null;
-        FileInputStream fileInputStream = null;
-        gzipInputStream = new GZIPInputStream(new FileInputStream(file));
-        String outFilename = file.absolutePath.substring(0, file.absolutePath.length() - 3)
-        OutputStream out = new FileOutputStream(outFilename);
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = gzipInputStream.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-        gzipInputStream.close();
-        out.close();
     }
 
     def run(args) {
