@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-# push *.json.gz into a local SQLite database
+// push *.json.gz into a local SQLite database
 import org.sqlite.*
 
 @Grapes([
