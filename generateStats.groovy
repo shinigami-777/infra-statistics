@@ -345,7 +345,7 @@ class Generator {
     def run() {
         svgDir.deleteDir()
         svgDir.mkdirs()
-        workingDir.eachFileMatch( ~".*json" ) { file -> generateStats(file, svgDir) }
+        workingDir.eachFileMatch( ~".*json.gz" ) { file -> generateStats(file, svgDir) }
         //        workingDir.eachFileMatch( ~"201109.json" ) { file -> generateStats(file, svgDir) }
         //        workingDir.eachFileMatch( ~"200812.json" ) { file -> generateStats(file, svgDir) }
 
