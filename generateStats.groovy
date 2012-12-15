@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+// generate SVGs that constitutes http://stats.jenkins-ci.org/jenkins-stats/
 import java.util.zip.GZIPInputStream;
 
 import groovy.xml.MarkupBuilder
@@ -66,7 +68,7 @@ class Generator {
             nodesOsNrs.add(number)
         }
 
-        def simplename = file.name.substring(0, file.name.lastIndexOf("."))
+        def simplename = file.name.substring(0, file.name.indexOf("."))
 
         def totalJenkinsInstallations = version2number.inject(0){input, version, number -> input + number}
         createBarSVG("Jenkins installations (total: $totalJenkinsInstallations)", new File(targetDir, "$simplename-jenkins.svg"), version2number, 10, false, {true}) // {it.value >= 5})
