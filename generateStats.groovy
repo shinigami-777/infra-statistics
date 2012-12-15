@@ -348,7 +348,11 @@ class Generator {
     def run() {
         svgDir.deleteDir()
         svgDir.mkdirs()
-        workingDir.eachFileMatch( ~".*json.gz" ) { file -> generateStats(file, svgDir) }
+        if (args.length>0) {
+            args.each { name -> generateStats(new File(name),svgDir) }
+        } else {
+            workingDir.eachFileMatch( ~".*json.gz" ) { file -> generateStats(file, svgDir) }
+        }
         // workingDir.eachFileMatch( ~"201109.json.gz" ) { file -> generateStats(file, svgDir) }
 
         createBarSVG("Total Jenkins installations", new File(svgDir, "total-jenkins.svg"), dateStr2totalJenkins, 100, false, {true})
