@@ -24,10 +24,10 @@ class Generator {
         JenkinsMetricParser p = new JenkinsMetricParser()
         def installations = p.parse(file)
 
-        def version2number = [:]
+        def version2number = [:] as TreeMap
         def plugin2number = [:]
         def jobtype2number = [:]
-        def nodesOnOs2number = [:]
+        def nodesOnOs2number = [:] as TreeMap
         def executorCount2number = [:]
 
         installations.each { instId, metric ->
@@ -50,6 +50,7 @@ class Generator {
             }
 
             metric.nodesOnOs.each { os, nodesNumber ->
+                os = os.toString()
                 def currentNodeNumber = nodesOnOs2number.get(os)
                 currentNodeNumber = currentNodeNumber ? currentNodeNumber + nodesNumber : nodesNumber
                 nodesOnOs2number.put(os, currentNodeNumber)
@@ -348,8 +349,7 @@ class Generator {
         svgDir.deleteDir()
         svgDir.mkdirs()
         workingDir.eachFileMatch( ~".*json.gz" ) { file -> generateStats(file, svgDir) }
-        //        workingDir.eachFileMatch( ~"201109.json" ) { file -> generateStats(file, svgDir) }
-        //        workingDir.eachFileMatch( ~"200812.json" ) { file -> generateStats(file, svgDir) }
+        // workingDir.eachFileMatch( ~"201109.json.gz" ) { file -> generateStats(file, svgDir) }
 
         createBarSVG("Total Jenkins installations", new File(svgDir, "total-jenkins.svg"), dateStr2totalJenkins, 100, false, {true})
         createBarSVG("Total Nodes", new File(svgDir, "total-nodes.svg"), dateStr2totalNodes, 100, false, {true})
