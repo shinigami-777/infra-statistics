@@ -16,10 +16,10 @@ class Generator {
         this.statsDir = new File(workingDir, "stats")
     }
 
-    def generateInstallationsJson(targetDir) {
+    def generateInstallationsJson() {
 
         def installations = [:]
-        db.eachRow("select version, count(*) as number from jenkins group by version;") {
+        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins GROUP BY version;") {
             installations.put it.version, it.number
         }
 
@@ -29,30 +29,46 @@ class Generator {
     }
 
 
-    def generatePluginsJson(targetDir) {
+    def generatePluginsJson() {
 
         println "fetching plugin names..."
         def names = []
         // fetch all plugin names, excluding the private ones...
-        db.eachRow("select name from plugin where name not like 'privateplugin%' group by name ;") { names << it.name }
+        db.eachRow("SELECT name FROM plugin WHERE name NOT LIKE 'privateplugin%' GROUP BY name ;") { names << it.name }
         println "found ${names.size()} plugins"
+
+        def total = [:];
+        db.eachRow("SELECT month, COUNT(*) AS number FROM jenkins GROUP BY month ORDER BY month ASC;") {
+            total[it.month] = it.number;
+        }
 
         names.each{ name ->
             def month2number = [:]
+            def month2percentage = [:]
             def file = new File(statsDir, "${name}.stats.json")
             // fetch the number of installations per plugin per month
-            db.eachRow("select month, count(*) as number from plugin where name = $name group by month order by month ASC;") {
+            db.eachRow("SELECT month, COUNT(*) AS number FROM plugin WHERE name = $name GROUP BY month ORDER BY month ASC;") {
                 month2number.put it.month, it.number
+                month2percentage[it.month] = (it.number as float)*100/(total[it.month] as float)
             }
             def json = new groovy.json.JsonBuilder()
-            json.installations(month2number)
+            json name:name, installations:month2number, installationsPercentage:month2percentage
             file << groovy.json.JsonOutput.prettyPrint(json.toString())
             println "wrote: $file.absolutePath"
         }
-
-
     }
 
+    def generateLatestNumbersJson() {
+        def plugins = [:]
+        def latestMonth;
+        db.eachRow("SELECT name, COUNT(*) AS number, month FROM plugin WHERE month=(select MAX(month) FROM plugin) AND name NOT LIKE 'privateplugin%' GROUP BY name, month;"){
+            plugins.put it.name, it.number
+            latestMonth = it.month // ok, this is probably not the nicest way, but the month is realy the same for all the numbers anyway
+        }
+        def json = new groovy.json.JsonBuilder()
+        json month:latestMonth, plugins:plugins
+        new File(statsDir, "latestNumbers.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
+    }
 
     def run() {
 
@@ -60,8 +76,9 @@ class Generator {
         statsDir.deleteDir()
         statsDir.mkdirs()
 
-        generateInstallationsJson(statsDir)
-        generatePluginsJson(statsDir)
+        generateInstallationsJson()
+        generatePluginsJson()
+        generateLatestNumbersJson()
 
     }
 }

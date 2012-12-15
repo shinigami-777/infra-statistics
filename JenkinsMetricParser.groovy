@@ -6,17 +6,17 @@ import org.codehaus.jackson.map.*
 import java.util.zip.GZIPInputStream
 
 /**
-* This parser treats a file as an input for one month and only uses the newest stats entry of each instanceId.
-*
-*
-* Note: Although groovy provides first class json support, we use jackson because of the amount of data we have to deal
-*/
+ * This parser treats a file as an input for one month and only uses the newest stats entry of each instanceId.
+ * 
+ * 
+ * Note: Although groovy provides first class json support, we use jackson because of the amount of data we have to deal
+ */
 class JenkinsMetricParser {
 
     /**
-* Returns a map of "instanceId -> InstanceMetric" - only the newest entry for each instance is returned (latest of the given month, each file contains only data for one month).
-* SNAPSHOT versions are ignored too.
-*/
+     * Returns a map of "instanceId -> InstanceMetric" - only the newest entry for each instance is returned (latest of the given month, each file contains only data for one month).
+     * SNAPSHOT versions are ignored too.
+     */
     public Map parse(File file) throws Exception {
         def installations = [:]
         forEachInstance(file) { InstanceMetric m -> installations[m.instanceId]=m }
@@ -24,8 +24,8 @@ class JenkinsMetricParser {
     }
 
     /**
-* Pass {@link InstanceMetric} for each installation to the given closure.
-*/
+     * Pass {@link InstanceMetric} for each installation to the given closure.
+     */
     public void forEachInstance(File file, Closure processor) throws Exception {
         println "parsing $file"
 

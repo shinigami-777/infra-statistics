@@ -15,7 +15,7 @@ import groovyx.net.http.HTTPBuilder
 
 
 class Downloader {
-    def authUrl = "http://www.jenkins-ci.org"
+    def authUrl = "http://jenkins-ci.org"
 
     def db
     def workingDir

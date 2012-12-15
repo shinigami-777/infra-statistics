@@ -1,6 +1,6 @@
 /**
-* A metric instance for one instance
-*/
+ * A metric instance for one instance
+ */
 class InstanceMetric {
     String instanceId
     String jenkinsVersion
