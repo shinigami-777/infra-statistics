@@ -1,0 +1,106 @@
+#!/usr/bin/env groovy
+@Grab(group='com.gmongo', module='gmongo', version='0.9')
+@Grab(group='org.codehaus.jackson', module='jackson-core-asl', version='1.9.3')
+@Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.3')
+import com.gmongo.GMongo
+import org.codehaus.jackson.*
+import org.codehaus.jackson.map.*
+
+import groovy.util.CliBuilder
+import groovy.json.*
+
+def parseArgs(cliArgs) {
+    def cli = new CliBuilder(usage: "parse-usage.groovy [options]",
+                             header: "Options")
+
+    cli._(longOpt:'logs', args:1, required:true, "Directory containing raw logs")
+
+    cli._(longOpt:'output', args:1, required:true, "Directory to output processed JSON to")
+
+    cli._(longOpt:'timestamp', args:1, required:true, "Base timestamp for logs - i.e., '201112'")
+    
+    def options = cli.parse(cliArgs)
+
+    assert new File(options.logs).isDirectory(), "--logs value ${options.logs} is not a directory"
+    assert new File(options.output).isDirectory(), "--output value ${options.output} is not a directory"
+
+    return options
+}
+
+
+def argResult = parseArgs(this.args)
+def mongoConnection = new GMongo("127.0.0.1", 27017)
+def mongoDb = mongoConnection.getDB("test")
+def mColl = mongoDb.jenkins
+mColl.drop()
+
+def procJson = [:]
+
+def ant = new AntBuilder()
+
+def slurper = new JsonSlurper()
+
+def tmpDir = new File("./tmp")
+
+if (!tmpDir.isDirectory()) { 
+    tmpDir.mkdirs()
+}
+
+def logRE = ".*log\\.${argResult.timestamp}.*gz"
+
+def linesSeen = 0
+def instCnt = [:]
+
+new File(argResult.logs).eachFileMatch(~/$logRE/) { origGzFile ->
+    println "Handing original log ${origGzFile.canonicalPath}"
+    def origJsonText = "gzip -dc ${origGzFile.canonicalPath}".execute().in.text
+    linesSeen += origJsonText.tokenize("\n").size()
+    origJsonText.eachLine { l ->
+        def j = slurper.parseText(l)
+        def installId = j.install
+        def ver = j.version
+
+        def jobCnt = j.jobs.values().inject(0) { acc, val -> acc+ val }
+
+        if (jobCnt > 0) {
+            mColl << j
+            if (!instCnt.containsKey(installId)) {
+                instCnt[installId] = 0
+            }
+            instCnt[installId] += 1
+        }
+        
+    }
+}
+
+println "${mColl.count()} total reports with >0 jobs"
+def ex = mColl.findOne()
+def uniqIds = mColl.distinct("install")
+println "${uniqIds.size()} unique installs seen."
+
+def seenTwice = [:]
+
+def fMap = "function map() { emit(this.install, { insts: [this], count: 1 } ) }"
+def fRed = "function reduce(key, values) { var result = { insts : [], count: 0 }; values.forEach(function(value) { result.insts.push.apply(result.insts, value.insts); result.count += value.count }); return result }"
+mongoDb.tempgroup.drop()
+def grouped = mColl.mapReduce(fMap, fRed, "tempgroup", [:])
+
+def printed = 0
+new File(argResult.output, "${argResult.timestamp}.json").withWriter() {w ->
+    def builder = new StreamingJsonBuilder(w)
+
+    builder { 
+        mongoDb.tempgroup.find("value.count": [ '$gt': 1 ]).each { g ->
+            def toSave = []
+            g.value.insts.each { v ->
+                v.remove("_id")
+                toSave << v
+            }
+            
+            "${g.'_id'}" toSave
+        }
+    }
+}
+mongoConnection.close()
+mongoDb = ''
+mColl = ''
