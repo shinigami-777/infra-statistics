@@ -115,7 +115,9 @@ def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
     def fMap = "function map() { emit(this.install, { insts: [this], count: 1 } ) }"
     def fRed = "function reduce(key, values) { var result = { insts : [], count: 0 }; values.forEach(function(value) { result.insts.push.apply(result.insts, value.insts); result.count += value.count }); return result }"
     mongoDb.tempgroup.drop()
-    def grouped = mColl.mapReduce(fMap, fRed, "tempgroup", [:])
+    def grouped = null;
+    if(uniqIds.size()>0)
+        mColl.mapReduce(fMap, fRed, "tempgroup", [:])
 
     def printed = 0
     def otmp = new File(outputDir, "${timestamp}.json.tmp")
