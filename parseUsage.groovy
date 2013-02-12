@@ -8,6 +8,7 @@ import org.codehaus.jackson.map.*
 
 import groovy.util.CliBuilder
 import groovy.json.*
+import java.util.zip.*;
 
 def parseArgs(cliArgs) {
     def cli = new CliBuilder(usage: "parse-usage.groovy [options]",
@@ -53,9 +54,8 @@ def instCnt = [:]
 
 new File(argResult.logs).eachFileMatch(~/$logRE/) { origGzFile ->
     println "Handing original log ${origGzFile.canonicalPath}"
-    def origJsonText = "gzip -dc ${origGzFile.canonicalPath}".execute().in.text
-    linesSeen += origJsonText.tokenize("\n").size()
-    origJsonText.eachLine { l ->
+    new GZIPInputStream(new FileInputStream(origGzFile)).eachLine("UTF-8") { l ->
+        linesSeen++;
         def j = slurper.parseText(l)
         def installId = j.install
         def ver = j.version
@@ -86,19 +86,24 @@ mongoDb.tempgroup.drop()
 def grouped = mColl.mapReduce(fMap, fRed, "tempgroup", [:])
 
 def printed = 0
-new File(argResult.output, "${argResult.timestamp}.json").withWriter() {w ->
-    def builder = new StreamingJsonBuilder(w)
+new File(argResult.output, "${argResult.timestamp}.json.gz").withOutputStream() {os ->
+    w = new OutputStreamWriter(new GZIPOutputStream(os),"UTF-8");
+    try {
+        def builder = new StreamingJsonBuilder(w)
 
-    builder { 
-        mongoDb.tempgroup.find("value.count": [ '$gt': 1 ]).each { g ->
-            def toSave = []
-            g.value.insts.each { v ->
-                v.remove("_id")
-                toSave << v
+        builder { 
+            mongoDb.tempgroup.find("value.count": [ '$gt': 1 ]).each { g ->
+                def toSave = []
+                g.value.insts.each { v ->
+                    v.remove("_id")
+                    toSave << v
+                }
+                
+                "${g.'_id'}" toSave
             }
-            
-            "${g.'_id'}" toSave
         }
+    } finally {
+        w.close();
     }
 }
 mongoConnection.close()
