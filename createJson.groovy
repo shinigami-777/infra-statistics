@@ -19,7 +19,7 @@ class Generator {
     def generateInstallationsJson() {
 
         def installations = [:]
-        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins GROUP BY version;") {
+        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM plugin) GROUP BY version;") {
             installations.put it.version, it.number
         }
 
@@ -56,6 +56,21 @@ class Generator {
             file << groovy.json.JsonOutput.prettyPrint(json.toString())
             println "wrote: $file.absolutePath"
         }
+
+        names.each { name ->
+            def version2number = [:]
+            def version2percentage = [:]
+            def file = new File(statsDir, "${name}.versions.json")
+            // fetch the number of installations per plugin version this month
+            db.eachRow("SELECT COUNT(*) AS number, version, month FROM plugin WHERE name = $name AND month = (SELECT MAX(month) FROM plugin) GROUP BY version") {
+                version2number.put it.version, it.number
+                version2percentage[it.version] = (it.number as float)*100/(total[it.month] as float)
+            }
+            def json = new groovy.json.JsonBuilder()
+            json name:name, installations:version2number, installationsPercentage:version2percentage
+            file << groovy.json.JsonOutput.prettyPrint(json.toString())
+            println "wrote: $file.absolutePath"
+        }
     }
 
     def generateLatestNumbersJson() {
@@ -70,15 +85,31 @@ class Generator {
         new File(statsDir, "latestNumbers.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
     }
 
+
+    // like installations.json, but cumulative descending: number indicates number of installations of given version or higher
+    def generateCapabilitiesJson() {
+        def installations = [:]
+        def higherCap = 0
+        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM jenkins) AND version LIKE '1.%' GROUP BY version ORDER BY version DESC;") {
+            installations.put it.version, it.number + higherCap
+            higherCap += it.number
+        }
+
+        def json = new groovy.json.JsonBuilder()
+        json.installations(installations)
+        new File(statsDir, "capabilities.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
+    }
+
     def run() {
 
         // clean the stats directory
         statsDir.deleteDir()
         statsDir.mkdirs()
 
+        generateCapabilitiesJson()
         generateInstallationsJson()
-        generatePluginsJson()
         generateLatestNumbersJson()
+        generatePluginsJson()
 
     }
 }
