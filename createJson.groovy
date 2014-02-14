@@ -18,6 +18,7 @@ class Generator {
 
     def generateInstallationsJson() {
 
+        println "generating installations.json..."
         def installations = [:]
         db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM plugin) GROUP BY version;") {
             installations.put it.version, it.number
@@ -74,6 +75,7 @@ class Generator {
     }
 
     def generateLatestNumbersJson() {
+        println "generating latestNumbers.json..."
         def plugins = [:]
         def latestMonth;
         db.eachRow("SELECT name, COUNT(*) AS number, month FROM plugin WHERE month=(select MAX(month) FROM plugin) AND name NOT LIKE 'privateplugin%' GROUP BY name, month;"){
@@ -88,6 +90,7 @@ class Generator {
 
     // like installations.json, but cumulative descending: number indicates number of installations of given version or higher
     def generateCapabilitiesJson() {
+        println "generating capabilities.json..."
         def installations = [:]
         def higherCap = 0
         db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM jenkins) AND version LIKE '1.%' GROUP BY version ORDER BY version DESC;") {
