@@ -70,7 +70,7 @@ class JenkinsMetricParser {
                         def timestampStr = jsonNode.get("timestamp").getTextValue() // 11/Oct/2011:05:14:43 -0400
                         Date parsedDate = Date.parse('dd/MMM/yyyy:HH:mm:ss Z', timestampStr)
 
-                        servletContainer = jsonNode.get("servletContainer")
+                        servletContainer = jsonNode.get("servletContainer")?.getTextValue()
 
                         // we only want the latest available date for each instance
                         if(!latestStatsDate || parsedDate.after(latestStatsDate)){
