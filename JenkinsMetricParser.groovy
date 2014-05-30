@@ -56,6 +56,7 @@ class JenkinsMetricParser {
                 def jobs
                 def plugins
                 def jVersion
+                def servletContainer;
                 def nrOfnodes
                 def nodesOnOs
                 def totalExecutors
@@ -68,6 +69,8 @@ class JenkinsMetricParser {
                         // And now we have random access to everything in the object
                         def timestampStr = jsonNode.get("timestamp").getTextValue() // 11/Oct/2011:05:14:43 -0400
                         Date parsedDate = Date.parse('dd/MMM/yyyy:HH:mm:ss Z', timestampStr)
+
+                        servletContainer = jsonNode.get("servletContainer")
 
                         // we only want the latest available date for each instance
                         if(!latestStatsDate || parsedDate.after(latestStatsDate)){
@@ -106,7 +109,7 @@ class JenkinsMetricParser {
                 }
 
                 if(jVersion){ // && availableStatsForInstance >= 10 // take stats only if we have at least 10 stats snapshots
-                    def metric = new InstanceMetric(instanceId:instanceId, jenkinsVersion: jVersion, plugins: plugins, jobTypes: jobs, nodesOnOs: nodesOnOs, totalExecutors: totalExecutors)
+                    def metric = new InstanceMetric(instanceId:instanceId, jenkinsVersion: jVersion, plugins: plugins, jobTypes: jobs, nodesOnOs: nodesOnOs, totalExecutors: totalExecutors, servletContainer:servletContainer)
 
                     processor(metric)
                 }
