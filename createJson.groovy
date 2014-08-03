@@ -52,26 +52,21 @@ class Generator {
                 month2number.put it.month, it.number
                 month2percentage[it.month] = (it.number as float)*100/(total[it.month] as float)
             }
-            def json = new groovy.json.JsonBuilder()
-            json name:name, installations:month2number, installationsPercentage:month2percentage
+			
+			def version2number = [:]
+			def version2percentage = [:]
+			// fetch the number of installations per plugin version this month
+			db.eachRow("SELECT COUNT(*) AS number, version, month FROM plugin WHERE name = $name AND month = (SELECT MAX(month) FROM plugin) GROUP BY version") {
+				version2number.put it.version, it.number
+				version2percentage[it.version] = (it.number as float)*100/(total[it.month] as float)
+			}
+			
+			def json = new groovy.json.JsonBuilder()
+            json name:name, installations:month2number, installationsPercentage:month2percentage, installationsPerVersion:version2number, installationsPercentagePerVersion:version2percentage
             file << groovy.json.JsonOutput.prettyPrint(json.toString())
             println "wrote: $file.absolutePath"
         }
 
-        names.each { name ->
-            def version2number = [:]
-            def version2percentage = [:]
-            def file = new File(statsDir, "${name}.versions.json")
-            // fetch the number of installations per plugin version this month
-            db.eachRow("SELECT COUNT(*) AS number, version, month FROM plugin WHERE name = $name AND month = (SELECT MAX(month) FROM plugin) GROUP BY version") {
-                version2number.put it.version, it.number
-                version2percentage[it.version] = (it.number as float)*100/(total[it.month] as float)
-            }
-            def json = new groovy.json.JsonBuilder()
-            json name:name, installations:version2number, installationsPercentage:version2percentage
-            file << groovy.json.JsonOutput.prettyPrint(json.toString())
-            println "wrote: $file.absolutePath"
-        }
     }
 
     def generateLatestNumbersJson() {
