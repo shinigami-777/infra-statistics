@@ -19,7 +19,7 @@ this scipts will create the following files:
 
   * `name`: the name of the plugin (as used in the filename)
   * `installations`: the number of installations for a given month
-  * `installationsPercentage`: the percentage of 
+  * `installationsPercentage`: the percentage of installations
   * `installationsPerVersion`: the number of plugin installations for for each plugin version
   * `installationsPercentagePerVersion`: the percentage of installations a specifig version of the plugin makes up
   
@@ -37,7 +37,7 @@ this scipts will create the following files:
 
    `$> groovy download.groovy [pwd]`
    
-#### SVG (optional)
+#### SVG (optional)
 
 * generate the graphs
    ... you might have to increase the memory: `JAVA_OPTS="-Xmx4000M"`
