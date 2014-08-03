@@ -1,6 +1,8 @@
 Jenkins Usage Statistics
 ========================
 
+[![Build Status](http://ci.jenkins-ci.org/buildStatus/icon?job=infra_statistics)](http://ci.jenkins-ci.org/view/All/job/infra_statistics/)
+
 These scripts generate various data from existing census JSON files collected by the jenkins-ci.org infrastructure.
 More specifically:
 
@@ -13,23 +15,23 @@ HOWTO
 
 1. download the raw data (*.json.gz) from jenkins-ci.org
 
-   $> groovy download.groovy [pwd]
+   `$> groovy download.groovy [pwd]`
 
 2. generate the graphs
-   ... you might have to increase the memory: JAVA_OPTS="-Xmx4000M"
+   ... you might have to increase the memory: `JAVA_OPTS="-Xmx4000M"`
 
-   $> groovy generateStats.groovy
+  `$> groovy generateStats.groovy`
 
 The final SVGs will be in target/svg
 
 
 3. collect the data from the raw json format and store it into a local SQLight database
    
-    $> groovy collectNumbers.groovy
+    `$> groovy collectNumbers.groovy`
 
 4. generate the fine grained data set (json) for each plugin
    
-    $> groovy createJson.groovy
+    `$> groovy createJson.groovy`
 
 The final json files will be in [worksapce]/target/stats - these files have to be uploaded to a webserver to make them available for the confluence plugin.
 
