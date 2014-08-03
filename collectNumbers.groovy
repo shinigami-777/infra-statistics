@@ -3,7 +3,7 @@
 import org.sqlite.*
 
 @Grapes([
-    @Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.3'),
+    @Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.13'),
     @Grab('org.xerial:sqlite-jdbc:3.7.2'),
     @GrabConfig(systemClassLoader=true)
 ])
