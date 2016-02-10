@@ -48,7 +48,9 @@ class JenkinsMetricParser {
             // move from field name to field value
             current = jp.nextToken();
 
-            if(instanceId?.size() == 64){ // installation hash is 64 chars
+            // Install id *should* be 64 but one of size 128 showed up recently and broke all parsing here
+            // past its entry, so adding handling of 128 size...
+            if(instanceId?.size() == 64 || instanceId?.size() == 128){ // installation hash is 64 chars
 
                 def availableStatsForInstance = 0
 
