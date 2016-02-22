@@ -29,6 +29,68 @@ class Generator {
         new File(statsDir, "installations.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
     }
 
+    def generateOldestJenkinsPerPlugin() {
+
+        def nMonthsAgo = System.currentTimeMillis() - ( 3L * 30 /* roughly a month */ * 86400 /* one day in seconds */ * 1000 )
+
+        // Loading map of instanceid:version for the last occurrences in the last few months
+        def instanceVersion = [:]
+
+        def start = System.currentTimeMillis()
+        print "Loading instanceid <-> Jenkins version map... "
+        db.eachRow("SELECT instanceid,max(version) as version from jenkins where month >= $nMonthsAgo group by instanceid") {
+            instanceVersion[it.instanceid] = it.version
+        }
+        println "Done. ${instanceVersion.size()} instanceids found. Took ${(System.currentTimeMillis() - start)/1000 } seconds."
+
+        // NOTE: might have been simpler with an inner join, but missing index on instanceid to improve inner join.
+        // Should/could we add it?
+        def nameVersionWithMinJenkinsVersion = [:] // [ : [:] ] actually pluginid/pluginversion/jenkinsoldestversion
+
+
+        println "analyzing plugins to get plugin/pluginversion/jenkinsoldestversion info... "
+        start = System.currentTimeMillis()
+        // fetch all plugin names, excluding the private ones...
+        db.eachRow("select name,version,instanceid" +
+                "   from plugin where month >= $nMonthsAgo " +
+                "        and name NOT LIKE 'privateplugin%' " +
+                "        and version NOT LIKE '%(private)' " + // add e.g. `and name like 'b%'` to reduce the dataset when testing
+                "   order by name,version desc,instanceid") {
+
+            if( ! nameVersionWithMinJenkinsVersion.containsKey(it.name) ) {
+                nameVersionWithMinJenkinsVersion.put(it.name, [:])
+            }
+            if( ! nameVersionWithMinJenkinsVersion[it.name].containsKey(it.version)) {
+                nameVersionWithMinJenkinsVersion[it.name].put(it.version, [:])
+            }
+
+            String jenkinsVersion = instanceVersion[it.instanceid]
+            Integer count = nameVersionWithMinJenkinsVersion[it.name][it.version][jenkinsVersion]
+
+            if(count == null) {
+                count = 0;
+            }
+            count++;
+            nameVersionWithMinJenkinsVersion[it.name][it.version][jenkinsVersion] = count;
+        }
+        println "Done. Took ${(System.currentTimeMillis() - start)/1000} seconds."
+
+        println "Sorting Jenkins versions... "
+        nameVersionWithMinJenkinsVersion.each { pluginName, versionMap ->
+            versionMap.each { version, jenkinsCountMap ->
+                nameVersionWithMinJenkinsVersion[pluginName][version] = new TreeMap(nameVersionWithMinJenkinsVersion[pluginName][version])
+            }
+
+        }
+        println "Done."
+
+        def json = new groovy.json.JsonBuilder()
+        json 'jenkins-version-per-plugin-version':nameVersionWithMinJenkinsVersion
+
+        def file = new File(statsDir, "jenkins-version-per-plugin-version.json")
+        file << groovy.json.JsonOutput.prettyPrint(json.toString())
+        println "wrote: $file.absolutePath"
+    }
 
     def generatePluginsJson() {
 
@@ -104,6 +166,7 @@ class Generator {
         statsDir.deleteDir()
         statsDir.mkdirs()
 
+        generateOldestJenkinsPerPlugin()
         generateCapabilitiesJson()
         generateInstallationsJson()
         generateLatestNumbersJson()
