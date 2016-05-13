@@ -1,2 +1,8 @@
 target
 target/svg/*
+
+*.iml
+
+.idea/
+
+
