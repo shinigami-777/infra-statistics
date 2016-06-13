@@ -36,7 +36,7 @@ node('census && docker') {
 
 
     stage 'Process raw logs'
-    docker.image('mongo:2').withRun { container ->
+    docker.image('mongo:2').withRun('-p 27017:27017') { container ->
         withEnv(customEnv) {
             sh "groovy parseUsage.groovy --logs ${usagestats_dir} --output ${census_dir} --incremental"
         }
