@@ -32,7 +32,7 @@ node('census && docker') {
 
     stage 'Sync raw data and census files'
     sh "rsync -avz ${USAGE_HOST}:/srv/usage/usage-stats ."
-    sh "rsync -avz ${CENSUS_HOST}:/srv/census ."
+    sh "rsync -avz ${CENSUS_HOST}:/srv/census/census ."
 
 
     stage 'Process raw logs'
@@ -44,6 +44,7 @@ node('census && docker') {
 
     stage 'Generate census data'
     withEnv(customEnv) {
+        sh 'mkdir -p target'
         sh "groovy collectNumbers.groovy ${census_dir}/*.json.gz"
         sh 'groovy createJson.groovy'
     }
