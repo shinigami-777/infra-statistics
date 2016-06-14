@@ -58,20 +58,10 @@ node('census && docker') {
     echo 'Not publishing census just yet'
 
     stage 'Publish stats'
-    echo 'Not publishing stats just yet'
+    try {
+        sh './publish-svgs.sh'
+    }
+    finally {
+        sh 'git checkout master'
+    }
 }
-
-
-/* previous freestyle config
-
-    still to be done:
-
-    git checkout gh-pages
-    git config user.name `hostname`
-    git config user.email &quot;no-reply@jenkins-ci.org&quot;
-    cp -R target/svg/* svg/
-    git add svg
-    git commit -am &quot;generating stats&quot; || true
-    git push git@github.com:jenkinsci/infra-statistics.git gh-pages
-    git checkout master
-*/
