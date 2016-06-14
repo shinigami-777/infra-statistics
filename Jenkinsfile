@@ -55,7 +55,7 @@ node('census && docker') {
     }
 
     stage 'Publish census'
-    echo 'Not publishing census just yet'
+    sh "rsync -avz ${census_dir} ${CENSUS_HOST}:/srv/census"
 
     stage 'Publish stats'
     try {
