@@ -124,44 +124,40 @@ class Generator {
             item2number = item2number.sort({ k1, k2 -> k1 <=> k2} as Comparator)
         }
 
-        def csvFile = new File(fileStem.path+".csv")
-        csvFile.delete()
-        csvFile.withPrintWriter { w ->
+        new File(fileStem.path+".csv").withPrintWriter { w ->
             item2number.each { item, number ->
                 w.println("\"${item}\",\"${number}\"")
             }
         }
 
 
-        def svgFile = new File(fileStem.path+".svg")
-        svgFile.delete()
-
-
         def higestNr = item2number.inject(0){ input, version, number -> number > input ? number : input }
         def viewWidth = (item2number.size() * 15) + 50
 
-        def pwriter = new FileWriter(svgFile)
-        def pxml = new MarkupBuilder(pwriter)
-        pxml.svg('xmlns': 'http://www.w3.org/2000/svg', "version": "1.1", "preserveAspectRatio":'xMidYMid meet', "viewBox": "0 0 "+ viewWidth +" "+((higestNr / scaleReduction)+350)) {
-            // 350 for the text/legend
+        new File(fileStem.path+".svg").withWriter { pwriter ->
+            def pxml = new MarkupBuilder(pwriter)
+            pxml.svg('xmlns': 'http://www.w3.org/2000/svg', "version": "1.1", "preserveAspectRatio": 'xMidYMid meet', "viewBox": "0 0 " + viewWidth + " " + ((higestNr / scaleReduction) + 350)) {
+                // 350 for the text/legend
 
-            item2number.eachWithIndex { item, number, index ->
+                item2number.eachWithIndex { item, number, index ->
 
-                def barHeight = number / scaleReduction
+                    def barHeight = number / scaleReduction
 
-                def x = (index + 1) * 15
-                def y = ((higestNr / scaleReduction) - barHeight) + 50 // 50 to get some space for the total text at the top
-                rect(fill:"blue", height: barHeight, stroke:"black", width:"12", x:x, y:y) {
+                    def x = (index + 1) * 15
+                    def y = ((higestNr / scaleReduction) - barHeight) + 50 // 50 to get some space for the total text at the top
+                    rect(fill: "blue", height: barHeight, stroke: "black", width: "12", x: x, y: y) {
+                    }
+                    def ty = y + barHeight + 5
+                    def tx = x
+                    text(x: tx, y: ty, "font-family": 'Tahoma', "font-size": '12', transform: "rotate(90 $tx,$ty)", "text-rendering": 'optimizeSpeed', fill: '#000000;', "$item ($number)") {
+                    }
                 }
-                def ty = y + barHeight + 5
-                def tx = x
-                text(x:tx, y:ty, "font-family":'Tahoma', "font-size":'12', transform:"rotate(90 $tx,$ty)", "text-rendering":'optimizeSpeed', fill:'#000000;', "$item ($number)"){}
+
+                text(x: '10', y: '40', "font-family": 'Tahoma', "font-size": '20', "text-rendering": 'optimizeSpeed', fill: '#000000;', "$title") {
+                }
+
             }
-
-            text(x:'10', y:'40', "font-family":'Tahoma', "font-size":'20', "text-rendering":'optimizeSpeed', fill:'#000000;', "$title"){}
-
         }
-
     }
 
 
@@ -177,7 +173,7 @@ class Generator {
      *   labels: an array of labels to appear in the legend, one for each wedge
      *   lx, ly: the upper-left corner of the chart legend
      */
-    def createPieSVG(def title, def fileStem, def data,def cx,def cy,def r,def colors,def labels,def lx,def ly) {
+    def createPieSVG(def title, def fileStem, List<Integer> data,def cx,def cy,def r,def colors, List<String> labels,def lx,def ly) {
 
         new File(fileStem.path+".csv").withPrintWriter { w ->
             for(def i = 0; i < data.size(); i++) {
