@@ -72,23 +72,23 @@ class Generator {
         def simplename = file.name.substring(0, file.name.indexOf("."))
 
         def totalJenkinsInstallations = version2number.inject(0){input, version, number -> input + number}
-        createBarSVG("Jenkins installations (total: $totalJenkinsInstallations)", new File(targetDir, "$simplename-jenkins.svg"), version2number, 10, false, {true}) // {it.value >= 5})
+        createBarSVG("Jenkins installations (total: $totalJenkinsInstallations)", new File(targetDir, "$simplename-jenkins"), version2number, 10, false, {true}) // {it.value >= 5})
 
         def totalPluginInstallations = plugin2number.inject(0){input, version, number -> input + number}
-        createBarSVG("Plugin installations (total: $totalPluginInstallations)", new File(targetDir, "$simplename-plugins.svg"), plugin2number, 100, true, {!it.key.startsWith("privateplugin")})
-        createBarSVG("Top Plugin installations (installations > 500)", new File(targetDir, "$simplename-top-plugins500.svg"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 500})
-        createBarSVG("Top Plugin installations (installations > 1000)", new File(targetDir, "$simplename-top-plugins1000.svg"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 1000})
+        createBarSVG("Plugin installations (total: $totalPluginInstallations)", new File(targetDir, "$simplename-plugins"), plugin2number, 100, true, {!it.key.startsWith("privateplugin")})
+        createBarSVG("Top Plugin installations (installations > 500)", new File(targetDir, "$simplename-top-plugins500"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 500})
+        createBarSVG("Top Plugin installations (installations > 1000)", new File(targetDir, "$simplename-top-plugins1000"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 1000})
 
         def totalJobs = jobtype2number.inject(0){input, version, number -> input + number}
-        createBarSVG("Jobs (total: $totalJobs)", new File(targetDir, "$simplename-jobs.svg"), jobtype2number, 1000, true, {!it.key.startsWith("private")})
+        createBarSVG("Jobs (total: $totalJobs)", new File(targetDir, "$simplename-jobs"), jobtype2number, 1000, true, {!it.key.startsWith("private")})
 
         def totalNodes = nodesOnOs2number.inject(0){input, version, number -> input + number}
-        createBarSVG("Nodes (total: $totalNodes)", new File(targetDir, "$simplename-nodes.svg"), nodesOnOs2number, 10, true, {true})
+        createBarSVG("Nodes (total: $totalNodes)", new File(targetDir, "$simplename-nodes"), nodesOnOs2number, 10, true, {true})
 
         createPieSVG("Nodes", new File(targetDir, "$simplename-nodesPie.svg"), nodesOsNrs, 200, 300, 150, Helper.COLORS, nodesOs, 370, 20)
 
         def totalExecutors = executorCount2number.inject(0){ result, executors, number -> result + (executors * number)  }
-        createBarSVG("Executors per install (total: $totalExecutors)", new File(targetDir, "$simplename-total-executors.svg"), executorCount2number, 25, false, {true})
+        createBarSVG("Executors per install (total: $totalExecutors)", new File(targetDir, "$simplename-total-executors"), executorCount2number, 25, false, {true})
 
         def dateStr = file.name.substring(0, 6)
         dateStr2totalJenkins.put dateStr, totalJenkinsInstallations
@@ -98,16 +98,25 @@ class Generator {
 
     }
 
+    /**
+     * Generates CSV & SVG file
+     *
+     * @param title
+     *      Chart title
+     * @param fileStem
+     *      File name stem including path but without extension.
+     * @param item2number
+     *      Data to render
+     * @param scaleReduction
+     *      To keep SVG graph reasonable in size, you can scale Y-axis down by this factor.
+     * @param sortByValue
+     *      True if the graph should be sorted by the value, false if sorted by the key
+     * @param filter
+     *      Filter down {@code item2number}
+     */
+    def createBarSVG(def title, def fileStem, Map<String,Integer> item2number, int scaleReduction, boolean sortByValue, Closure filter){
 
-
-    def createBarSVG(def title, def svgFile, def item2number, def scaleReduction, boolean sortByValue, Closure filter){
-
-        svgFile.delete()
-
-        def higestNr = item2number.inject(0){ input, version, number -> number > input ? number : input }
-
-        // ignore all private types
-        item2number = item2number.findAll(filter) //{!it.key.startsWith("private")}
+        item2number = item2number.findAll(filter)
 
         if(sortByValue) {
             item2number = item2number.sort{ a, b -> a.value <=> b.value }
@@ -115,7 +124,20 @@ class Generator {
             item2number = item2number.sort({ k1, k2 -> k1 <=> k2} as Comparator)
         }
 
+        def csvFile = new File(fileStem.path+".csv")
+        csvFile.delete()
+        csvFile.withPrintWriter { w ->
+            item2number.each { item, number ->
+                w.println("\"${item}\",\"${number}\"")
+            }
+        }
 
+
+        def svgFile = new File(fileStem.path+".svg")
+        svgFile.delete()
+
+
+        def higestNr = item2number.inject(0){ input, version, number -> number > input ? number : input }
         def viewWidth = (item2number.size() * 15) + 50
 
         def pwriter = new FileWriter(svgFile)
@@ -355,10 +377,10 @@ class Generator {
         }
         // workingDir.eachFileMatch( ~"201109.json.gz" ) { file -> generateStats(file, svgDir) }
 
-        createBarSVG("Total Jenkins installations", new File(svgDir, "total-jenkins.svg"), dateStr2totalJenkins, 100, false, {true})
-        createBarSVG("Total Nodes", new File(svgDir, "total-nodes.svg"), dateStr2totalNodes, 100, false, {true})
-        createBarSVG("Total Jobs", new File(svgDir, "total-jobs.svg"), dateStr2totalJobs, 1000, false, {true})
-        createBarSVG("Total Plugin installations", new File(svgDir, "total-plugins.svg"), dateStr2totalPluginsInstallations, 1000, false, {true})
+        createBarSVG("Total Jenkins installations", new File(svgDir, "total-jenkins"), dateStr2totalJenkins, 100, false, {true})
+        createBarSVG("Total Nodes", new File(svgDir, "total-nodes"), dateStr2totalNodes, 100, false, {true})
+        createBarSVG("Total Jobs", new File(svgDir, "total-jobs"), dateStr2totalJobs, 1000, false, {true})
+        createBarSVG("Total Plugin installations", new File(svgDir, "total-plugins"), dateStr2totalPluginsInstallations, 1000, false, {true})
         createHtml(svgDir)
     }
 
