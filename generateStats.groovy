@@ -85,7 +85,7 @@ class Generator {
         def totalNodes = nodesOnOs2number.inject(0){input, version, number -> input + number}
         createBarSVG("Nodes (total: $totalNodes)", new File(targetDir, "$simplename-nodes"), nodesOnOs2number, 10, true, {true})
 
-        createPieSVG("Nodes", new File(targetDir, "$simplename-nodesPie.svg"), nodesOsNrs, 200, 300, 150, Helper.COLORS, nodesOs, 370, 20)
+        createPieSVG("Nodes", new File(targetDir, "$simplename-nodesPie"), nodesOsNrs, 200, 300, 150, Helper.COLORS, nodesOs, 370, 20)
 
         def totalExecutors = executorCount2number.inject(0){ result, executors, number -> result + (executors * number)  }
         createBarSVG("Executors per install (total: $totalExecutors)", new File(targetDir, "$simplename-total-executors"), executorCount2number, 25, false, {true})
@@ -177,7 +177,13 @@ class Generator {
      *   labels: an array of labels to appear in the legend, one for each wedge
      *   lx, ly: the upper-left corner of the chart legend
      */
-    def createPieSVG(def title, def svgFile, def data,def cx,def cy,def r,def colors,def labels,def lx,def ly) {
+    def createPieSVG(def title, def fileStem, def data,def cx,def cy,def r,def colors,def labels,def lx,def ly) {
+
+        new File(fileStem.path+".csv").withPrintWriter { w ->
+            for(def i = 0; i < data.size(); i++) {
+                w.println("\"${data[i]}\",\"${labels[i]}\"")
+            }
+        }
 
         // Add up the data values so we know how big the pie is
         def total = 0;
@@ -194,70 +200,73 @@ class Generator {
 
         def viewWidth = lx + 350 // 350 for the text of the legend
         def viewHeight = ly + (data.size() * squareHeight) + 30 // 30 to get some space at the bottom
-        def pwriter = new FileWriter(svgFile)
-        def pxml = new MarkupBuilder(pwriter)
-        pxml.svg('xmlns': 'http://www.w3.org/2000/svg', "version": "1.1", "preserveAspectRatio":'xMidYMid meet', "viewBox": "0 0 $viewWidth $viewHeight") {
+        new File(fileStem.path+".svg").withWriter { pwriter ->
+            def pxml = new MarkupBuilder(pwriter)
+            pxml.svg('xmlns': 'http://www.w3.org/2000/svg', "version": "1.1", "preserveAspectRatio": 'xMidYMid meet', "viewBox": "0 0 $viewWidth $viewHeight") {
 
 
-            text("x": 30, // Position the text
-                    "y": 40,
-                    "font-family": "sans-serif",
-                    "font-size": "16",
-                    "$title, total: $total"){}
-
-
-            data.eachWithIndex { item, i ->
-                // This is where the wedge ends
-                def endangle = startangle + angles[i];
-
-                // Compute the two points where our wedge intersects the circle
-                // These formulas are chosen so that an angle of 0 is at 12 o'clock
-                // and positive angles increase clockwise.
-                def x1 = cx + r * Math.sin(startangle);
-                def y1 = cy - r * Math.cos(startangle);
-                def x2 = cx + r * Math.sin(endangle);
-                def y2 = cy - r * Math.cos(endangle);
-
-                // This is a flag for angles larger than than a half circle
-                def big = 0;
-                if (endangle - startangle > Math.PI) {big = 1}
-
-                // We describe a wedge with an <svg:path> element
-                // Notice that we create this with createElementNS()
-                //            def path = document.createElementNS(SVG.ns, "path");
-
-                // This string holds the path details
-                def d = "M " + cx + "," + cy +      // Start at circle center
-                        " L " + x1 + "," + y1 +     // Draw line to (x1,y1)
-                        " A " + r + "," + r +       // Draw an arc of radius r
-                        " 0 " + big + " 1 " +       // Arc details...
-                        x2 + "," + y2 +             // Arc goes to to (x2,y2)
-                        " Z";                       // Close path back to (cx,cy)
-
-                path(   d: d, // Set this path
-                        fill: colors[i], // Set wedge color
-                        stroke: "black", // Outline wedge in black
-                        "stroke-width": "1" // 1 unit thick
-                        ){}
-
-                // The next wedge begins where this one ends
-                startangle = endangle;
-
-                // Now draw a little matching square for the key
-                rect(   x: lx,  // Position the square
-                        y: ly + squareHeight*i,
-                        "width": 20, // Size the square
-                        "height": squareHeight,
-                        "fill": colors[i], // Same fill color as wedge
-                        "stroke": "black", // Same outline, too.
-                        "stroke-width": "1"){}
-
-                // And add a label to the right of the rectangle
-                text(   "x": lx + 30, // Position the text
-                        "y": ly + squareHeight*i + 18,
+                text("x": 30, // Position the text
+                        "y": 40,
                         "font-family": "sans-serif",
                         "font-size": "16",
-                        "${labels[i]} ($item)"){}
+                        "$title, total: $total") {}
+
+
+                data.eachWithIndex { item, i ->
+                    // This is where the wedge ends
+                    def endangle = startangle + angles[i];
+
+                    // Compute the two points where our wedge intersects the circle
+                    // These formulas are chosen so that an angle of 0 is at 12 o'clock
+                    // and positive angles increase clockwise.
+                    def x1 = cx + r * Math.sin(startangle);
+                    def y1 = cy - r * Math.cos(startangle);
+                    def x2 = cx + r * Math.sin(endangle);
+                    def y2 = cy - r * Math.cos(endangle);
+
+                    // This is a flag for angles larger than than a half circle
+                    def big = 0;
+                    if (endangle - startangle > Math.PI) {
+                        big = 1
+                    }
+
+                    // We describe a wedge with an <svg:path> element
+                    // Notice that we create this with createElementNS()
+                    //            def path = document.createElementNS(SVG.ns, "path");
+
+                    // This string holds the path details
+                    def d = "M " + cx + "," + cy +      // Start at circle center
+                            " L " + x1 + "," + y1 +     // Draw line to (x1,y1)
+                            " A " + r + "," + r +       // Draw an arc of radius r
+                            " 0 " + big + " 1 " +       // Arc details...
+                            x2 + "," + y2 +             // Arc goes to to (x2,y2)
+                            " Z";                       // Close path back to (cx,cy)
+
+                    path(d: d, // Set this path
+                            fill: colors[i], // Set wedge color
+                            stroke: "black", // Outline wedge in black
+                            "stroke-width": "1" // 1 unit thick
+                    ) {}
+
+                    // The next wedge begins where this one ends
+                    startangle = endangle;
+
+                    // Now draw a little matching square for the key
+                    rect(x: lx,  // Position the square
+                            y: ly + squareHeight * i,
+                            "width": 20, // Size the square
+                            "height": squareHeight,
+                            "fill": colors[i], // Same fill color as wedge
+                            "stroke": "black", // Same outline, too.
+                            "stroke-width": "1") {}
+
+                    // And add a label to the right of the rectangle
+                    text("x": lx + 30, // Position the text
+                            "y": ly + squareHeight * i + 18,
+                            "font-family": "sans-serif",
+                            "font-size": "16",
+                            "${labels[i]} ($item)") {}
+                }
             }
         }
     }
