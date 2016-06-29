@@ -1,9 +1,9 @@
 Jenkins Usage Statistics
 ========================
 
-[![Build Status](http://ci.jenkins-ci.org/buildStatus/icon?job=infra_statistics)](http://ci.jenkins-ci.org/view/All/job/infra_statistics/)
+[![Build Status](https://ci.jenkins.io/job/Infrastructure/statistics/badge/icon)](https://ci.jenkins.io/job/Infrastructure/statistics)
 
-These scripts generate various data from existing census JSON files collected by the jenkins-ci.org infrastructure.
+These scripts generate various data from existing census JSON files collected by the jenkins.io infrastructure.
 More specifically:
 
 - http://stats.jenkins-ci.org/
