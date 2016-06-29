@@ -306,9 +306,10 @@ class Generator {
                             tr(){
                                 specialFiles.each { fileName ->
                                     td(){
-                                        a(href: fileName, fileName){
-                                            object(data: fileName, width: 200, type: "image/svg+xml")
-                                        }
+                                        csv = fileName.replace(".svg",".csv")
+                                        a(href: fileName, fileName){}
+                                        a(href: csv, csv){}
+                                        object(data: fileName, width: 200, type: "image/svg+xml")
                                     }
                                 }
                             }
@@ -319,6 +320,16 @@ class Generator {
                         div(){ h1('Statistics by months'){} }
 
                         table(){
+                            // column header
+                            def firstRow = fileGroups.values().iterator().next();
+                            tr {
+                                td("Month")
+                                firstRow.each { String fileName ->
+                                    fileName = fileName.substring(7) // chop off the YYYYMM- portion
+                                    fileName = fileName.substring(0,fileName.length()-4);   // then the '.svg' suffix
+                                    td(fileName)
+                                }
+                            }
 
                             fileGroups.reverseEach { dateStr, fileList ->
                                 tr(){
@@ -326,7 +337,10 @@ class Generator {
                                     td(parsedDate.format('yyyy-MM (MMMMM)')){}
                                     fileList.each{ fileName ->
                                         td(){
-                                            a("class": "info", href: fileName, fileName, alt: fileName, "data-content": "<object data='$fileName' width='200' type='image/svg+xml'/>", rel: "popover","data-original-title": fileName)
+                                            def csv = fileName.replace(".svg",".csv")
+                                            a("class": "info", href: fileName, 'SVG', alt: fileName, "data-content": "<object data='$fileName' width='200' type='image/svg+xml'/>", rel: "popover","data-original-title": fileName)
+                                            span('/')
+                                            a("class": "info", href: csv, 'CSV', alt: csv)
                                         }
                                     }
                                 }
