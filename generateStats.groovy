@@ -296,6 +296,13 @@ class Generator {
                 script(src: "http://twitter.github.com/bootstrap/1.4.0/bootstrap-popover.js", type: "text/javascript", ""){}
 
                 link(rel: "stylesheet", href: "http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css"){}
+
+                style """
+                    #byMonth td {
+                        padding: 0.5em;
+                        text-align: center;
+                    }
+                """
             }
             body(){
                 div("class":"container"){
@@ -306,9 +313,9 @@ class Generator {
                             tr(){
                                 specialFiles.each { fileName ->
                                     td(){
-                                        csv = fileName.replace(".svg",".csv")
-                                        a(href: fileName, fileName){}
-                                        a(href: csv, csv){}
+                                        def csv = fileName.replace(".svg",".csv")
+                                        a(href: fileName, fileName)
+                                        a(href: csv, 'CSV')
                                         object(data: fileName, width: 200, type: "image/svg+xml")
                                     }
                                 }
