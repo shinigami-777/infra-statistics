@@ -36,7 +36,12 @@ node('census && docker') {
 
 
     stage 'Process raw logs'
-    docker.image('mongo:2').withRun('-p 27017:27017') { container ->
+    // Nuke and recreate the Mongo data directory.
+    sh "rm -rf mongo-data"
+    sh "mkdir -p mongo-data"
+
+    // Use the Mongo data directory in the workspace.
+    docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + ":/data/db") { container ->
         withEnv(customEnv) {
             sh "groovy parseUsage.groovy --logs ${usagestats_dir} --output ${census_dir} --incremental"
         }
