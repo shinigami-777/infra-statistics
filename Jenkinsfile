@@ -41,7 +41,7 @@ node('census && docker') {
     sh "mkdir -p mongo-data"
 
     // Use the Mongo data directory in the workspace.
-    docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + ":/data/db") { container ->
+    docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + "/mongo-data:/data/db") { container ->
         withEnv(customEnv) {
             sh "groovy parseUsage.groovy --logs ${usagestats_dir} --output ${census_dir} --incremental"
         }
