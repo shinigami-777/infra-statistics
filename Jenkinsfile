@@ -39,7 +39,9 @@ node('census && docker') {
     // Nuke and recreate the Mongo data directory.
     sh "rm -rf mongo-data"
     sh "mkdir -p mongo-data"
-
+    // Make sure the jenkins group can still nuke this directory - it'll get chown'd to the mongod user from the container,
+    // but the group isn't changed.
+    sh "chmod -R g+rwx mongo-data"
     // Use the Mongo data directory in the workspace.
     docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + "/mongo-data:/data/db") { container ->
         withEnv(customEnv) {
