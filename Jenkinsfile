@@ -36,8 +36,9 @@ node('census && docker') {
 
 
     stage 'Process raw logs'
-    // Nuke and recreate the Mongo data directory.
-    sh "rm -rf mongo-data"
+    // TODO: Fix ownership!
+    // The mongo-data directory will end up containing files and dirs owned by 999:docker that we can't do much about for the moment.
+    // Needs a better fix going forward, but for the moment...
     sh "mkdir -p mongo-data"
     // Make sure the jenkins group can still nuke this directory - it'll get chown'd to the mongod user from the container,
     // but the group isn't changed.
