@@ -40,9 +40,7 @@ node('census && docker') {
     // The mongo-data directory will end up containing files and dirs owned by 999:docker that we can't do much about for the moment.
     // Needs a better fix going forward, but for the moment...
     sh "mkdir -p mongo-data"
-    // Make sure the jenkins group can still nuke this directory - it'll get chown'd to the mongod user from the container,
-    // but the group isn't changed.
-    sh "chmod -R g+rwx mongo-data"
+
     // Use the Mongo data directory in the workspace.
     docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + "/mongo-data:/data/db") { container ->
         withEnv(customEnv) {
