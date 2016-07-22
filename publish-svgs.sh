@@ -4,7 +4,7 @@
 git branch -D gh-pages || true
 # Check out the most recent version of the gh-pages branch
 git fetch origin
-git checkout gh-pages --track origin/gh-pages
+git checkout -b gh-pages --track origin/gh-pages
 
 git config user.name `hostname`
 git config user.email "no-reply@jenkins.io"
