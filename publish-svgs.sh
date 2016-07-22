@@ -12,6 +12,8 @@ git config user.email "no-reply@jenkins.io"
 cp -R target/svg/* jenkins-stats/svg/
 cp -R target/stats/* plugin-installation-trend/
 
+./generate-index.sh plugin-installation-trend
+
 git add jenkins-stats/svg
 git add plugin-installation-trend
 
