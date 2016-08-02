@@ -78,6 +78,7 @@ class Generator {
         createBarSVG("Plugin installations (total: $totalPluginInstallations)", new File(targetDir, "$simplename-plugins"), plugin2number, 100, true, {!it.key.startsWith("privateplugin")})
         createBarSVG("Top Plugin installations (installations > 500)", new File(targetDir, "$simplename-top-plugins500"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 500})
         createBarSVG("Top Plugin installations (installations > 1000)", new File(targetDir, "$simplename-top-plugins1000"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 1000})
+        createBarSVG("Top Plugin installations (installations > 2500)", new File(targetDir, "$simplename-top-plugins2500"), plugin2number, 100, true, {!it.key.startsWith("privateplugin") && it.value > 2500})
 
         def totalJobs = jobtype2number.inject(0){input, version, number -> input + number}
         createBarSVG("Jobs (total: $totalJobs)", new File(targetDir, "$simplename-jobs"), jobtype2number, 1000, true, {!it.key.startsWith("private")})
