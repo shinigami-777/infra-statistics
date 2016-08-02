@@ -1,33 +1,78 @@
 #!/bin/bash
 
-DIRNAME=$1
+set -o nounset
 
-if [ -z "${DIRNAME}" ]; then
-    echo "The first parameter to this script must be a directory name"
+set -o pipefail
+
+set -o errexit
+
+shopt -s failglob
+
+if [[ $# -lt 1 ]] ; then
+    echo "Usage: $0 <directory>" >&2
+    exit 1
+fi
+
+DIRNAME="$1"
+
+if [ ! -d "$DIRNAME" ]; then
+    echo "Not a directory: $DIRNAME" >&2
     exit 1;
-fi;
+fi
 
-FILENAME="${DIRNAME}/index.html"
+if [ ! -x "$DIRNAME" ]; then
+    echo "Executable permission missing: $DIRNAME" >&2
+    exit 1;
+fi
+
+if [ ! -r "$DIRNAME" ]; then
+    echo "Read permission missing: $DIRNAME" >&2
+    exit 1;
+fi
+
+FILENAME="$DIRNAME/index.html"
 
 cat > $FILENAME <<EOF
 <html>
   <head>
     <title>${DIRNAME}</title>
+    <style type="text/css">
+* {
+  font-family: sans-serif;
+}
+    </style>
   </head>
   <body>
-    <center><h1>${dirname}</h1></center>
-    <br/>
+    <h1>Installation Trends JSON</h1>
 
     <ul>
 EOF
 
+for f in installations latestNumbers capabilities ; do
+    FILE="$DIRNAME/$f.json"
+    if [[ ! -f "$FILE" ]] ; then
+        echo "Required file does not exist: $FILE" >&2
+        exit 1
+    fi
 
-for f in $(find $DIRNAME -maxdepth 1 -type f | sort); do
+    cat >> $FILENAME <<EOF
+     <li><a href="${FILE}">$f</a></li>
+EOF
+done
+
+cat >> $FILENAME <<EOF
+    </ul>
+    <h2>Plugins</h2>
+    <ul>
+EOF
+
+for f in "$DIRNAME"/*.stats.json ; do
     FILE=$(basename $f)
     cat >> $FILENAME <<EOF
-     <li><a href="${FILE}">${FILE}</a></li>
+     <li><a href="${FILE}">${FILE/.stats.json/}</a></li>
 EOF
-done;
+
+  done;
 
 cat >> $FILENAME <<EOF
 
