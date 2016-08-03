@@ -48,7 +48,7 @@ cat > $FILENAME <<EOF
     <ul>
 EOF
 
-for f in installations latestNumbers capabilities ; do
+for f in installations latestNumbers capabilities jenkins-version-per-plugin-version ; do
     FILE="$DIRNAME/$f.json"
     if [[ ! -f "$FILE" ]] ; then
         echo "Required file does not exist: $FILE" >&2
@@ -56,7 +56,7 @@ for f in installations latestNumbers capabilities ; do
     fi
 
     cat >> $FILENAME <<EOF
-     <li><a href="${FILE}">$f</a></li>
+     <li><a href="${f}.json">$f</a></li>
 EOF
 done
 
