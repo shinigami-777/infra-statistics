@@ -27,6 +27,11 @@ class Generator {
         def json = new groovy.json.JsonBuilder()
         json.installations(installations)
         new File(statsDir, "installations.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
+        new File(statsDir, "installations.csv").withPrintWriter { w ->
+            installations.each { v, n ->
+                w.println("\"${v}\",\"${n}\"")
+            }
+        }
     }
 
     def generateOldestJenkinsPerPlugin() {
@@ -142,6 +147,11 @@ class Generator {
         def json = new groovy.json.JsonBuilder()
         json month:latestMonth, plugins:plugins
         new File(statsDir, "latestNumbers.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
+        new File(statsDir, "latestNumbers.csv").withPrintWriter { w ->
+            plugins.each { name, number ->
+                w.println("\"${name}\",\"${number}\"")
+            }
+        }
     }
 
 
@@ -158,6 +168,11 @@ class Generator {
         def json = new groovy.json.JsonBuilder()
         json.installations(installations)
         new File(statsDir, "capabilities.json") << groovy.json.JsonOutput.prettyPrint(json.toString())
+        new File(statsDir, "capabilities.csv").withPrintWriter { w ->
+            installations.each { v, n ->
+                w.println("\"${v}\",\"${n}\"")
+            }
+        }
     }
 
     def run() {
