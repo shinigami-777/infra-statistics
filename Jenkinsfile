@@ -31,8 +31,8 @@ node('census && docker') {
     final String census_dir = './census'
 
     stage 'Sync raw data and census files'
-    sh "rsync -avz ${USAGE_HOST}:/srv/usage/usage-stats ."
-    sh "rsync -avz ${CENSUS_HOST}:/srv/census/census ."
+    sh "rsync -avz --delete ${USAGE_HOST}:/srv/usage/usage-stats ."
+    sh "rsync -avz --delete ${CENSUS_HOST}:/srv/census/census ."
 
 
     stage 'Process raw logs'
