@@ -37,7 +37,7 @@ def outputDir=new File(argResult.output);
 
 if (argResult.incremental) {
     byMonth=[:] as TreeMap
-    re = /.*log\.([0-9]{6})[0-9]+\.gz/ 
+    re = /.*log\.([0-9]{6})[0-9]+(.*\.)?\.gz/ 
     logDir.eachFileMatch(~re) { f ->
         m = (f=~re)
         if (m)  byMonth[m[0][1]] = true;
