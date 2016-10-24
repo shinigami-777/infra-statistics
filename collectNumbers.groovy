@@ -37,7 +37,7 @@ class NumberCollector {
                     System.out.print('.');
                 def instId = metric.instanceId;
 
-                db.execute("insert into jenkins(instanceid, month, version) values( $instId, $monthDate, ${metric.jenkinsVersion})")
+                db.execute("insert into jenkins(instanceid, month, version, jvmvendor, jvmname, jvmversion) values( $instId, $monthDate, ${metric.jenkinsVersion}, ${metric.jvm?.vendor}, ${metric.jvm?.name}, ${metric.jvm?.version})")
 
                 metric.plugins.each { pluginName, pluginVersion ->
                     db.execute("insert into plugin(instanceid, month, name, version) values( $instId, $monthDate, $pluginName, $pluginVersion)")

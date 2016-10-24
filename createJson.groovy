@@ -175,6 +175,33 @@ class Generator {
         }
     }
 
+    // for each month, counts the number of JVM versions in use (using strict filtering to ignore weird/local JVM version names)
+    def generateJvmJson() {
+        final def JVM_VERSIONS = ["1.5", "1.6", "1.7", "1.8", "1.9"]
+        def jvmVersionsRestriction = "(jvmv='" + JVM_VERSIONS.join("' OR jvmv='") + "')"
+        def fileName = 'jvms.json'
+        println "generating $fileName..."
+        def months = []
+        db.eachRow("SELECT DISTINCT month FROM jenkins ORDER BY month ;") { months << it.month }
+
+        def jvmPerDate = [:]
+        months.each { month ->
+            def jvmCount = [:]
+            db.eachRow("SELECT SUBSTR(jvmversion,1,3) AS jvmv,COUNT(0) AS cnt " +
+                    "FROM jenkins " +
+                    "WHERE month=$month AND $jvmVersionsRestriction " +
+                    "GROUP BY month,jvmv " +
+                    "ORDER BY jvmv;") {
+                jvmCount.put(it.jvmv, it.cnt)
+            }
+            jvmPerDate.put(month, jvmCount)
+        }
+
+        def json = new groovy.json.JsonBuilder()
+        json jvmStatsPerMonth: jvmPerDate
+        new File(statsDir, fileName) << groovy.json.JsonOutput.prettyPrint(json.toString())
+    }
+
     def run() {
 
         // clean the stats directory
@@ -186,6 +213,7 @@ class Generator {
         generateInstallationsJson()
         generateLatestNumbersJson()
         generatePluginsJson()
+        generateJvmJson()
 
     }
 }

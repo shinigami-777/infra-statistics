@@ -2,6 +2,7 @@
 import org.codehaus.jackson.JsonToken
 
 import org.codehaus.jackson.*
+import org.codehaus.jackson.node.*
 import org.codehaus.jackson.map.*
 import java.util.zip.GZIPInputStream
 
@@ -58,8 +59,8 @@ class JenkinsMetricParser {
                 def jobs
                 def plugins
                 def jVersion
+                InstanceJVM masterJvm
                 def servletContainer;
-                def nrOfnodes
                 def nodesOnOs
                 def totalExecutors
 
@@ -98,6 +99,14 @@ class JenkinsMetricParser {
                                 totalExecutors = 0
 
                                 jsonNode.get("nodes").each {
+
+                                    if (BooleanNode.TRUE.equals(it.get("master"))) { // See https://git.io/vPA8J
+                                        masterJvm = new InstanceJVM(
+                                            vendor: it.get("jvm-vendor")?.textValue,
+                                            name: it.get("jvm-name")?.textValue,
+                                            version: it.get("jvm-version")?.textValue
+                                        )
+                                    }
                                     def os = it.get("os") == null ? "N/A" : it.get("os")
                                     def currentNodesNumber = nodesOnOs.get(os)
                                     currentNodesNumber = currentNodesNumber ? currentNodesNumber + 1 : 1
@@ -110,8 +119,17 @@ class JenkinsMetricParser {
                     }
                 }
 
-                if(jVersion){ // && availableStatsForInstance >= 10 // take stats only if we have at least 10 stats snapshots
-                    def metric = new InstanceMetric(instanceId:instanceId, jenkinsVersion: jVersion, plugins: plugins, jobTypes: jobs, nodesOnOs: nodesOnOs, totalExecutors: totalExecutors, servletContainer:servletContainer)
+                if (jVersion) { // && availableStatsForInstance >= 10 // take stats only if we have at least 10 stats snapshots
+                    def metric = new InstanceMetric(
+                            instanceId: instanceId,
+                            jenkinsVersion: jVersion,
+                            jvm: masterJvm,
+                            plugins: plugins,
+                            jobTypes: jobs,
+                            nodesOnOs: nodesOnOs,
+                            totalExecutors: totalExecutors,
+                            servletContainer: servletContainer
+                    )
 
                     processor(metric)
                 }
