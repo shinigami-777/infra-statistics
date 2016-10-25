@@ -160,7 +160,7 @@ class Generator {
         println "generating capabilities.json..."
         def installations = [:]
         def higherCap = 0
-        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM jenkins) AND version LIKE '1.%' GROUP BY version ORDER BY version DESC;") {
+        db.eachRow("SELECT version, COUNT(*) AS number FROM jenkins WHERE month=(select MAX(month) FROM jenkins) AND (version LIKE '1.%' OR version LIKE '2.%') GROUP BY version ORDER BY version DESC;") {
             installations.put it.version, it.number + higherCap
             higherCap += it.number
         }
