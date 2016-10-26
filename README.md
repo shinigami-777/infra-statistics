@@ -42,21 +42,28 @@ this scipts will create the following files:
 * generate the graphs
    ... you might have to increase the memory: `JAVA_OPTS="-Xmx4000M"`
 
-  `$> groovy generateStats.groovy`
+```
+$> export LANG=en
+$> groovy generateStats.groovy
+```
 
-The final SVGs will be in `[worksapce]/target/svg` 
+
+The final SVGs will be in `[workspace]/target/svg` 
 
 #### JSON (optional)
 
-1. collect the data from the raw json format and store it into a local SQLight database
+1. collect the data from the raw json format and store it into a local SQLite database
    
-    `$> groovy collectNumbers.groovy`
+```
+$> export LANG=en
+$> groovy collectNumbers.groovy`
+```
 
 2. generate the fine grained data set (json) for each plugin
    
     `$> groovy createJson.groovy`
 
-The final json files will be in `[worksapce]/target/stats` - these files have to be uploaded to a webserver to make them available for the confluence plugin.
+The final json files will be in `[workspace]/target/stats` - these files have to be uploaded to a webserver to make them available for the confluence plugin.
 
 
 All the scripts can be reexecuted in case a failure happens, e.g. the download will only download the files he needs and collecting the numbers will only happen on the raw data which is not imported yet.
