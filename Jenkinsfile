@@ -60,14 +60,19 @@ node('census && docker') {
         sh "groovy generateStats.groovy ${census_dir}/*.json.gz"
     }
 
-    stage 'Publish census'
-    sh "rsync -avz ${census_dir} ${CENSUS_HOST}:/srv/census"
+    if (env.BRANCH_NAME == 'master') {
+        stage 'Publish census'
+        sh "rsync -avz ${census_dir} ${CENSUS_HOST}:/srv/census"
 
-    stage 'Publish stats'
-    try {
-        sh './publish-svgs.sh'
-    }
-    finally {
-        sh 'git checkout master'
+        stage 'Publish stats'
+        try {
+            sh './publish-svgs.sh'
+        }
+        finally {
+            sh 'git checkout master'
+        }
+    } else {
+        stage 'Archive artifacts'
+        archiveArtifacts 'target/svg/*, target/stats/*'
     }
 }
