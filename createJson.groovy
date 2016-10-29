@@ -36,14 +36,12 @@ class Generator {
 
     def generateOldestJenkinsPerPlugin() {
 
-        def nMonthsAgo = System.currentTimeMillis() - ( 3L * 30 /* roughly a month */ * 86400 /* one day in seconds */ * 1000 )
-
-        // Loading map of instanceid:version for the last occurrences in the last few months
+        // Loading map of instanceid:version for the last month
         def instanceVersion = [:]
 
         def start = System.currentTimeMillis()
         print "Loading instanceid <-> Jenkins version map... "
-        db.eachRow("SELECT instanceid,max(version) as version from jenkins where month >= $nMonthsAgo group by instanceid") {
+        db.eachRow("SELECT instanceid,max(version) as version from jenkins where month=(select max(month) from jenkins) group by instanceid") {
             instanceVersion[it.instanceid] = it.version
         }
         println "Done. ${instanceVersion.size()} instanceids found. Took ${(System.currentTimeMillis() - start)/1000 } seconds."
@@ -57,7 +55,7 @@ class Generator {
         start = System.currentTimeMillis()
         // fetch all plugin names, excluding the private ones...
         db.eachRow("select name,version,instanceid" +
-                "   from plugin where month >= $nMonthsAgo " +
+                "   from plugin where month = (select max(month) from plugin) " +
                 "        and name NOT LIKE 'privateplugin%' " +
                 "        and version NOT LIKE '%(private)' " + // add e.g. `and name like 'b%'` to reduce the dataset when testing
                 "   order by name,version desc,instanceid") {
