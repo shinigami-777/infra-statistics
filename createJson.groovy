@@ -195,8 +195,22 @@ class Generator {
             jvmPerDate.put(month, jvmCount)
         }
 
+        def jvmPerDate2DotxOnly = [:]
+        months.findAll { it > 1459536318000 } // Ignore data before April 2016, when Jenkins 2.0 was released
+              .each    { month ->
+            def jvmCount = [:]
+            db.eachRow("SELECT SUBSTR(jvmversion,1,3) AS jvmv,COUNT(0) AS cnt " +
+                    "FROM jenkins " +
+                    "WHERE month=$month AND $jvmVersionsRestriction AND version like '2.%'" +
+                    "GROUP BY month,jvmv " +
+                    "ORDER BY jvmv;") {
+                jvmCount.put(it.jvmv, it.cnt)
+            }
+            jvmPerDate2DotxOnly.put(month, jvmCount)
+        }
+
         def json = new groovy.json.JsonBuilder()
-        json jvmStatsPerMonth: jvmPerDate
+        json jvmStatsPerMonth: jvmPerDate, jvmStatsPerMonth_2_x: jvmPerDate2DotxOnly
         new File(statsDir, fileName) << groovy.json.JsonOutput.prettyPrint(json.toString())
     }
 
