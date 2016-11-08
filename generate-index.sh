@@ -48,7 +48,7 @@ cat > $FILENAME <<EOF
     <ul>
 EOF
 
-for f in installations latestNumbers capabilities jenkins-version-per-plugin-version ; do
+for f in installations latestNumbers capabilities jenkins-version-per-plugin-version jvms ; do
     FILE="$DIRNAME/$f.json"
     if [[ ! -f "$FILE" ]] ; then
         echo "Required file does not exist: $FILE" >&2
