@@ -10,6 +10,8 @@ final String GROOVY_TOOL = 'groovy'
 final String USAGE_HOST  = 'usage.jenkins.io'
 final String CENSUS_HOST = 'census.jenkins.io'
 
+// Make sure we run this job once a month (at 3am on the 2nd of the month) when the raw stats are available.
+properties([pipelineTriggers([cron('0 3 2 * *')])])
 
 /* `census` is a node label for a single machine, ideally, which will be
  * consistently used for processing usage statistics and generating census data
