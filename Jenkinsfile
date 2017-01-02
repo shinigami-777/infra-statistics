@@ -16,7 +16,7 @@ properties([pipelineTriggers([cron('0 3 2 * *')])])
 /* `census` is a node label for a single machine, ideally, which will be
  * consistently used for processing usage statistics and generating census data
  */
-node('census && docker') {
+node('census') {
     /* grab our code from source control */
     checkout scm
 
