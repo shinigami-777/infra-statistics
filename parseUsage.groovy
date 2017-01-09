@@ -3,10 +3,8 @@
 @Grab(group='org.codehaus.jackson', module='jackson-core-asl', version='1.9.3')
 @Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.3')
 import com.gmongo.GMongo
-import org.codehaus.jackson.*
-import org.codehaus.jackson.map.*
+import com.mongodb.DBCollection
 
-import groovy.util.CliBuilder
 import groovy.json.*
 import java.util.zip.*;
 
@@ -36,10 +34,10 @@ def logDir=new File(argResult.logs)
 def outputDir=new File(argResult.output);
 
 if (argResult.incremental) {
-    byMonth=[:] as TreeMap
-    re = /.*log\.([0-9]{6})[0-9]+\.(.*\.)?gz/ 
+    def byMonth=[:] as TreeMap
+    def re = /.*log\.([0-9]{6})[0-9]+\.(.*\.)?gz/
     logDir.eachFileMatch(~re) { f ->
-        m = (f=~re)
+        def m = (f=~re)
         if (m)  byMonth[m[0][1]] = true;
     }
     def data = byMonth.keySet() as List
@@ -64,12 +62,8 @@ if (argResult.incremental) {
 def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
     def mongoConnection = new GMongo("127.0.0.1", 27017)
     def mongoDb = mongoConnection.getDB("test")
-    def mColl = mongoDb.jenkins
+    DBCollection mColl = mongoDb.jenkins
     mColl.drop()
-
-    def procJson = [:]
-
-    def ant = new AntBuilder()
 
     def slurper = new JsonSlurper()
 
@@ -106,35 +100,28 @@ def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
     }
 
     println "${mColl.count()} total reports with >0 jobs"
-    def ex = mColl.findOne()
+    mColl.createIndex([install: 1])
     def uniqIds = mColl.distinct("install")
     println "${uniqIds.size()} unique installs seen."
 
-    def seenTwice = [:]
-
-    def fMap = "function map() { emit(this.install, { insts: [this], count: 1 } ) }"
-    def fRed = "function reduce(key, values) { var result = { insts : [], count: 0 }; values.forEach(function(value) { result.insts.push.apply(result.insts, value.insts); result.count += value.count }); return result }"
-    mongoDb.tempgroup.drop()
-    def grouped = null;
-    if(uniqIds.size()>0)
-        mColl.mapReduce(fMap, fRed, "tempgroup", [:])
-
-    def printed = 0
     def otmp = new File(outputDir, "${timestamp}.json.tmp")
     otmp.withOutputStream() {os ->
-        w = new OutputStreamWriter(new GZIPOutputStream(os),"UTF-8");
+        def w = new OutputStreamWriter(new GZIPOutputStream(os),"UTF-8");
         try {
             def builder = new StreamingJsonBuilder(w)
 
-            builder { 
-                mongoDb.tempgroup.find("value.count": [ '$gt': 1 ]).each { g ->
-                    def toSave = []
-                    g.value.insts.each { v ->
-                        v.remove("_id")
-                        toSave << v
+            builder {
+                uniqIds.each { String inst
+                    def insts = mColl.find(install: inst)
+                    if (insts.count() > 1) {
+                        def toSave = []
+                        insts.each { v ->
+                            v.remove("_id")
+                            toSave << v
+                        }
+
+                        "${inst}" toSave
                     }
-                    
-                    "${g.'_id'}" toSave
                 }
             }
         } finally {
@@ -146,6 +133,6 @@ def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
     otmp.renameTo(new File(outputDir, "${timestamp}.json.gz"))
 
     mongoConnection.close()
-    mongoDb = ''
-    mColl = ''
+    mongoDb = null
+    mColl = null
 }
