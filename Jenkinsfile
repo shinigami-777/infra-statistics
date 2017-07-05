@@ -9,7 +9,7 @@ final String JAVA_TOOL   = 'jdk8'
 final String GROOVY_TOOL = 'groovy'
 final String USAGE_HOST  = 'usage.jenkins.io'
 final String CENSUS_HOST = 'census.jenkins.io'
-
+final boolean isPRTest = !infra.isTrusted() && env.BRANCH_NAME
 
 if (!infra.isTrusted()) {
     echo 'TODO: Implement viable pull request validation code here :)'
@@ -37,7 +37,7 @@ else {
         String census_dir = './census'
         String mongoDataDir = "mongo-data"
 
-        if (!infra.isTrusted() && env.BRANCH_NAME) {
+        if (isPRTest) {
             // If we're running for a PR build, use a fresh testing directory and nuke whatever was there previously.
             sh "rm -rf testing"
             sh "mkdir -p testing/census"
@@ -63,6 +63,13 @@ else {
             withEnv(customEnv) {
                 sh "groovy parseUsage.groovy --logs ${usagestats_dir} --output ${census_dir} --incremental"
             }
+        }
+
+        if (isPRTest) {
+            // Make sure the expected files exist.
+            sh "test -f ${pwd()}/testing/census/201103.json.gz"
+            sh "test -f ${pwd()}/testing/census/201104.json.gz"
+            sh "test -f ${pwd()}/testing/census/201105.json.gz"
         }
 
         stage 'Generate census data'
