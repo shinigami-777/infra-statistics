@@ -33,22 +33,33 @@ else {
             "JAVA_HOME=${javaHome}",
         ]
 
-        final String usagestats_dir = './usage-stats'
-        final String census_dir = './census'
+        String usagestats_dir = './usage-stats'
+        String census_dir = './census'
+        String mongoDataDir = "mongo-data"
 
+        if (!infra.isTrusted() && env.BRANCH_NAME) {
+            // If we're running for a PR build, use a fresh testing directory and nuke whatever was there previously.
+            sh "rm -rf testing"
+            sh "mkdir -p testing/census"
+            sh "cd testing && tar -xvzf ../test-data/usage.tar.gz ."
+            usagestats_dir = './testing/usage'
+            census_dir = './testing/census'
+            mongoDataDir = "testing/mongo-data"
+        }
         stage 'Sync raw data and census files'
-        sh "rsync -avz --delete ${USAGE_HOST}:/srv/usage/usage-stats ."
-        sh "rsync -avz --delete ${CENSUS_HOST}:/srv/census/census ."
-
+        if (infra.isTrusted()) {
+            sh "rsync -avz --delete ${USAGE_HOST}:/srv/usage/usage-stats ."
+            sh "rsync -avz --delete ${CENSUS_HOST}:/srv/census/census ."
+        }
 
         stage 'Process raw logs'
         // TODO: Fix ownership!
         // The mongo-data directory will end up containing files and dirs owned by 999:docker that we can't do much about for the moment.
         // Needs a better fix going forward, but for the moment...
-        sh "mkdir -p mongo-data"
+        sh "mkdir -p ${mongoDataDir}"
 
         // Use the Mongo data directory in the workspace.
-        docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + "/mongo-data:/data/db") { container ->
+        docker.image('mongo:2').withRun('-p 27017:27017 -v ' + pwd() + "/" + mongoDataDir + ":/data/db") { container ->
             withEnv(customEnv) {
                 sh "groovy parseUsage.groovy --logs ${usagestats_dir} --output ${census_dir} --incremental"
             }
