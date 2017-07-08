@@ -77,6 +77,7 @@ else {
             sh 'mkdir -p target'
             sh "groovy collectNumbers.groovy ${census_dir}/*.json.gz"
             sh 'groovy createJson.groovy'
+            sh 'groovy generateVersionDistribution.groovy'
         }
 
         stage 'Generate stats'
@@ -97,7 +98,7 @@ else {
             }
         } else {
             stage 'Archive artifacts'
-            archiveArtifacts 'target/svg/*, target/stats/*'
+            archiveArtifacts 'target/svg/*, target/stats/*, target/pluginversions/*'
         }
     }
 }
