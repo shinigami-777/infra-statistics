@@ -12,3 +12,4 @@ json.each { plugin, versions ->
     out.text = new File("generateVersionDistribution-template.html").text.replace("__NAME__", plugin).replace("__DATA__", new JsonBuilder(versions).toString())
 }
 
+"./generate-pluginversions-index.sh target/pluginsversions".execute()
