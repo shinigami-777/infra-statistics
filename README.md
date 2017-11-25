@@ -1,7 +1,7 @@
 Jenkins Usage Statistics
 ========================
 
-[![Build Status](https://ci.jenkins.io/job/Infrastructure/statistics/badge/icon)](https://ci.jenkins.io/job/Infrastructure/statistics)
+[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Infra/infra-statistics/master)](https://ci.jenkins.io/job/Infra/job/infra-statistics/job/master/)
 
 These scripts generate various data from existing census JSON files collected by the jenkins.io infrastructure.
 More specifically:
