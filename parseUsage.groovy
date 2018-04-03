@@ -1,5 +1,7 @@
 #!/usr/bin/env groovy
-@Grab(group='com.gmongo', module='gmongo', version='0.9')
+@Grab(group='com.gmongo', module='gmongo', version='1.5')
+@GrabExclude("org.codehaus.groovy:groovy-xml")
+@GrabExclude("org.codehaus.groovy:groovy-json")
 @Grab(group='org.codehaus.jackson', module='jackson-core-asl', version='1.9.3')
 @Grab(group='org.codehaus.jackson', module='jackson-mapper-asl', version='1.9.3')
 import com.gmongo.GMongo
@@ -101,8 +103,7 @@ def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
 
     println "${mColl.count()} total reports with >0 jobs"
     mColl.createIndex([install: 1])
-    def uniqIds = mColl.distinct("install")
-    println "${uniqIds.size()} unique installs seen."
+    println "${instCnt.keySet().size()} unique installs seen."
 
     def otmp = new File(outputDir, "${timestamp}.json.tmp")
     otmp.withOutputStream() {os ->
@@ -111,7 +112,7 @@ def process(String timestamp/*such as '201112'*/, File logDir, File outputDir) {
             def builder = new StreamingJsonBuilder(w)
 
             builder {
-                uniqIds.each { String inst ->
+                instCnt.keySet().each { String inst ->
                     def insts = mColl.find(install: inst)
                     if (insts.count() > 1) {
                         def toSave = []
