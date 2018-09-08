@@ -5,6 +5,8 @@ import org.codehaus.jackson.*
 import org.codehaus.jackson.node.*
 import org.codehaus.jackson.map.*
 import java.util.zip.GZIPInputStream
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * This parser treats a file as an input for one month and only uses the newest stats entry of each instanceId.
@@ -13,6 +15,9 @@ import java.util.zip.GZIPInputStream
  * Note: Although groovy provides first class json support, we use jackson because of the amount of data we have to deal
  */
 class JenkinsMetricParser {
+
+    // 11/Oct/2011:05:14:43 -0400
+    private static final FORMATTER = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss X", Locale.ENGLISH)
 
     /**
      * Returns a map of "instanceId -> InstanceMetric" - only the newest entry for each instance is returned (latest of the given month, each file contains only data for one month).
@@ -70,13 +75,13 @@ class JenkinsMetricParser {
                         // this moves the parsing position to the end of it
                         JsonNode jsonNode = jp.readValueAsTree();
                         // And now we have random access to everything in the object
-                        def timestampStr = jsonNode.get("timestamp").getTextValue() // 11/Oct/2011:05:14:43 -0400
-                        Date parsedDate = Date.parse('dd/MMM/yyyy:HH:mm:ss Z', timestampStr)
+                        def timestampStr = jsonNode.get("timestamp").getTextValue()
+                        ZonedDateTime parsedDate = ZonedDateTime.parse(timestampStr, FORMATTER)
 
                         servletContainer = jsonNode.get("servletContainer")?.getTextValue()
 
                         // we only want the latest available date for each instance
-                        if(!latestStatsDate || parsedDate.after(latestStatsDate)){
+                        if (!latestStatsDate || parsedDate.isAfter(latestStatsDate)) {
 
                             def versionStr = jsonNode.get("version").getTextValue()
                             // ignore SNAPSHOT versions
