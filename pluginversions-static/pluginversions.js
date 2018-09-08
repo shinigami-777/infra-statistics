@@ -36,16 +36,18 @@ function parseData(versionData, name) {
 
     // header row
     var row = $("<tr>");
-    row.append($("<th>").html(name + " - " + totalInstalls));
+    row.append($("<th>").html(name));
     for (let pluginVersion of pluginVersions) {
         row.append($("<th>").html(pluginVersion));
         thisCoreVersionOrOlderPerPluginVersion[pluginVersion] = 0;
     }
     row.append($("<th>").html("Sum"));
-    row.appendTo('#versionsContainer');
+    var thead = $("<thead>");
+    thead.appendTo('#versionsContainer');
+    row.appendTo(thead);
 
 
-    var thisCoreVersionOrOlder = 0
+    var thisCoreVersionOrOlder = 0;
 
     // value rows
     for (let coreVersion of coreVersions) {
@@ -76,4 +78,16 @@ function parseData(versionData, name) {
 
         row.appendTo('#versionsContainer');
     }
+
+    // footer row
+    var row = $("<tr>");
+    row.append($("<th>").html("Total"));
+    for (let pluginVersion of pluginVersions) {
+        row.append($("<td>").html(totalInstallsPerPluginVersion[pluginVersion]));
+    }
+    row.append($("<td>").html(totalInstalls));
+    var tfoot = $("<tfoot>");
+    tfoot.appendTo('#versionsContainer');
+    row.appendTo(tfoot);
+
 }
