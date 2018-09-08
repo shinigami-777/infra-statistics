@@ -1,0 +1,19 @@
+body, table {
+    font-family: monospace;
+}
+table {
+    border-collapse: collapse;
+    border: 1px solid #FF0000;
+}
+
+table td, table th {
+    border: 1px solid #FF0000;
+    text-align: center;
+    padding: 3px;
+}
+tr.lts {
+    background-color: #eef;
+}
+td.subtotal {
+    background-color: #ccc;
+}
