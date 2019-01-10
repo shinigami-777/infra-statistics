@@ -65,7 +65,7 @@ function parseData(versionData, name) {
             thisCoreVersion += cnt;
             var title = pluginVersion + " on " + coreVersion + ": " + cnt + " installs (" + Math.round(cnt/totalInstalls*100) + "%)";
             title += " - " + Math.round((1-thisCoreVersionOrOlderPerPluginVersion[pluginVersion]/totalInstallsPerPluginVersion[pluginVersion])*100) + "% of " + pluginVersion + " installs are on this core version or newer";
-            row.append($("<td>").attr("title", title).css("opacity", Math.max(0.1, cnt*100/totalInstalls)).html(cnt));
+            row.append($("<td>").attr("title", title).css("opacity", Math.max(0.1, cnt*100/totalInstalls)).html(cnt > 0 ? cnt: ""));
 
             thisCoreVersionOrOlderPerPluginVersion[pluginVersion] += cnt;
         }
