@@ -175,7 +175,7 @@ class Generator {
 
     // for each month, counts the number of JVM versions in use (using strict filtering to ignore weird/local JVM version names)
     def generateJvmJson() {
-        final def JVM_VERSIONS = ["1.5", "1.6", "1.7", "1.8", "1.9"]
+        final def JVM_VERSIONS = ["1.5", "1.6", "1.7", "1.8", "9", "10", "11", "12", "13"]
         def jvmVersionsRestriction = "(jvmv='" + JVM_VERSIONS.join("' OR jvmv='") + "')"
         def fileName = 'jvms.json'
         println "generating $fileName..."
