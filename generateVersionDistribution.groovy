@@ -26,4 +26,4 @@ json.each { plugin, versions ->
     out.text = htmlTemplate.replaceAll("__NAME__", plugin).replace("__DATA__", new JsonBuilder(versions).toString())
 }
 
-"./generate-pluginversions-index.sh target/pluginsversions".execute()
+"./generate-pluginversions-index.sh target/pluginversions".execute()
