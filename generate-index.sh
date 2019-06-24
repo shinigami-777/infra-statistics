@@ -35,7 +35,7 @@ FILENAME="$DIRNAME/index.html"
 cat > $FILENAME <<EOF
 <html>
   <head>
-    <title>${DIRNAME}</title>
+    <title>Installation Trends JSON</title>
     <style type="text/css">
 * {
   font-family: sans-serif;
