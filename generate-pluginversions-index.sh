@@ -35,7 +35,7 @@ FILENAME="$DIRNAME/index.html"
 cat > $FILENAME <<EOF
 <html>
   <head>
-    <title>${DIRNAME}</title>
+    <title>Install Counts by Plugin Version and Jenkins Version</title>
     <style type="text/css">
 * {
   font-family: sans-serif;
