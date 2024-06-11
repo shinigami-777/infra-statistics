@@ -12,7 +12,7 @@ More specifically:
 
 The scripts will create the following files:
 
-- multiple SVG graphics showing different statistcs about the usage of jenkins
+- multiple SVG graphics showing different statistics about the usage of Jenkins
 - a file `<plugin-name>.stats.json`for every plugin, containing the following data (example: git-plugin - [git.stats.json](http://stats.jenkins.io/plugin-installation-trend/git.stats.json) ):
 
   - `name`: the name of the plugin (as used in the filename)
@@ -21,14 +21,14 @@ The scripts will create the following files:
   - `installationsPerVersion`: the number of plugin installations for for each plugin version
   - `installationsPercentagePerVersion`: the percentage of installations a specifig version of the plugin makes up
 
-- `installations.json`: the number of jenkins installations by the jenkins core version
+- `installations.json`: the number of Jenkins installations by the Jenkins core version
 - `capabilities.json`: a reverse cumulation of the `installations.json` to assist plugin developers in choosing base versions for there further plugin development
 
 ## HOWTO
 
 ### Data
 
-1. you need to download the raw data (\*.json.gz) from jenkins-ci.org
+1. you need to download the raw data (\*.json.gz) from jenkins.io
 
    `$> groovy download.groovy [pwd]`
 
